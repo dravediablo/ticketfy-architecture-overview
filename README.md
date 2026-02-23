@@ -1,5 +1,3 @@
-# ticketfy-architecture-overview
-
 Offline-First Ticket Processing Architecture
 
 Case Study – David Chacón
@@ -124,7 +122,7 @@ Other devices receive changes
 
 Hybrid ID Mapping Strategy
 
-A hybrid ID structure is used to reconcile differences between:
+A hybrid ID structure reconciles differences between:
 
 Firestore document-based identifiers
 
@@ -132,12 +130,12 @@ SQLite relational numeric identifiers
 
 Example:
 
-SQLite:
+SQLite entity
 
 id: 2
 id_firebase: "firebase_vendor_123"
 
-Ticket record:
+Ticket record
 
 vendor_id_local: 2
 vendor_id_firebase: "firebase_vendor_123"
@@ -166,7 +164,7 @@ FROM tickets t
 JOIN vendors v ON t.vendor_id_local = v.id
 WHERE t.total > 500;
 
-These queries support analytics, reporting, and budgeting features within the mobile application.
+These queries support analytics and reporting features within the application.
 
 Example REST Integration (Node.js)
 import fetch from 'node-fetch';
@@ -207,7 +205,7 @@ Image compression before upload
 
 Stateless backend for horizontal scalability
 
-Target performance benchmarks:
+Target benchmarks:
 
 Image processing < 5 seconds
 
