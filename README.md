@@ -172,6 +172,8 @@ async function processReceipt(imageBase64) {
   return await response.json();
 }
 
+```
+
 
 
 This demonstrates the API-driven integration pattern between the mobile client and backend processing service.
