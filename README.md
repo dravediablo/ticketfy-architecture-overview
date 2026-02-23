@@ -1,134 +1,122 @@
-Offline-First Ticket Processing Architecture
+# Offline-First Ticket Processing Architecture
 
-Case Study – David Chacón
+**Case Study – David Chacón**
 
-Executive Summary
+## Table of Contents
+- [Executive Summary](#executive-summary)
+- [System Overview](#system-overview)
+- [Architecture Components](#architecture-components)
+- [Offline-First Synchronization Strategy](#offline-first-synchronization-strategy)
+- [Example REST Integration](#example-rest-integration)
+- [Conflict Resolution Strategy](#conflict-resolution-strategy)
+- [Performance Considerations](#performance-considerations)
+- [Security Model](#security-model)
+- [Key Technical Takeaways](#key-technical-takeaways)
 
-This repository presents the architecture of an offline-first mobile application designed to process purchase receipts using OCR and AI services, synchronize structured financial data between local and cloud databases, and ensure reliable multi-device consistency.
+## Executive Summary
+
+This repository presents the architecture of an offline-first mobile application designed to process purchase receipts using OCR and AI services, synchronize structured financial data between local and cloud environments, and maintain consistency across multiple devices.
 
 The system combines:
 
-A Flutter mobile application with a local SQLite database
-
-Firebase Firestore as the cloud source of truth
-
-A serverless backend deployed on Google Cloud Run
-
-REST-based integrations with AI and OCR services
-
-A bidirectional synchronization model with hybrid ID mapping
+- A Flutter mobile application with a local SQLite database
+- Firebase Firestore as the cloud source of truth
+- A serverless backend deployed on Google Cloud Run
+- REST-based integrations with AI and OCR services
+- A bidirectional synchronization model with hybrid ID mapping
 
 This case study demonstrates system design decisions, synchronization strategies, and API integration patterns relevant to scalable mobile platforms.
 
-System Overview
+## System Overview
 
 The architecture follows a hybrid offline-first model:
 
+
 Flutter App (SQLite)  ⇄  Firebase Firestore  ⇄  Cloud Run Backend
-Core Principles
 
-Local-first data access for performance and offline reliability
+### Core Principles
 
-Cloud as authoritative consistency layer
+- **Local-first data access** for performance and offline reliability
+- **Cloud as authoritative consistency layer**
+- **Event-driven synchronization**
+- **Stateless backend processing**
+- **Clear separation** between processing, storage, and presentation
 
-Event-driven synchronization
+## Architecture Components
 
-Stateless backend processing
-
-Clear separation between processing, storage, and presentation
-
-Architecture Components
-1. Mobile Application (Flutter + SQLite)
+### 1. Mobile Application (Flutter + SQLite)
 
 The mobile layer provides:
 
-Full offline functionality
+- Full offline functionality
+- Local relational storage via SQLite
+- Real-time listeners to Firestore
+- Background synchronization logic
+- Conflict resolution handling
 
-Local relational storage via SQLite
+**SQLite is used for:**
 
-Real-time listeners to Firestore
+- Fast JOIN-based queries
+- Aggregations and reporting
+- Local caching of entities (categories, vendors, payment methods)
 
-Background synchronization logic
-
-Conflict resolution handling
-
-SQLite is used for:
-
-Fast JOIN-based queries
-
-Aggregations and reporting
-
-Local caching of entities (categories, vendors, payment methods)
-
-2. Cloud Database (Firebase Firestore)
+### 2. Cloud Database (Firebase Firestore)
 
 Firestore acts as:
 
-Global source of truth
+- Global source of truth
+- Real-time synchronization hub
+- Multi-device consistency layer
+- User-isolated document storage
 
-Real-time synchronization hub
+**Data structure:**
 
-Multi-device consistency layer
-
-User-isolated document storage
-
-Data structure:
 
 users/{userId}/
   tickets/{ticketId}
   vendors/{vendorId}
   categories/{categoryId}
   payment_methods/{paymentId}
-3. Serverless Backend (Google Cloud Run)
+  
+
+### 3. Serverless Backend (Google Cloud Run)
 
 The backend is responsible for:
 
-Receiving receipt images via REST endpoints
+- Receiving receipt images via REST endpoints
+- Running OCR processing (Google Vision API)
+- Extracting structured data using AI services
+- Performing fuzzy entity matching
+- Writing normalized records to Firestore
 
-Running OCR processing (Google Vision API)
+The backend is **stateless and horizontally scalable**.
 
-Extracting structured data using AI services
+## Offline-First Synchronization Strategy
 
-Performing fuzzy entity matching
+### Bidirectional Sync Model
 
-Writing normalized records to Firestore
+**Cloud → Local**
+1. Firestore listener detects changes
+2. Ticket is retrieved
+3. Hybrid ID mapping is resolved
+4. Record is stored in SQLite
+5. UI updates immediately
 
-The backend is stateless and horizontally scalable.
+**Local → Cloud**
+1. User edits ticket locally
+2. SQLite updates
+3. Firestore is updated asynchronously
+4. Other devices receive changes
 
-Offline-First Synchronization Strategy
-Bidirectional Sync Model
-
-Cloud → Local
-
-Firestore listener detects changes
-
-Ticket is retrieved
-
-Hybrid ID mapping is resolved
-
-Record is stored in SQLite
-
-UI updates immediately
-
-Local → Cloud
-
-User edits ticket locally
-
-SQLite updates
-
-Firestore is updated asynchronously
-
-Other devices receive changes
-
-Hybrid ID Mapping Strategy
+### Hybrid ID Mapping Strategy
 
 A hybrid ID structure reconciles differences between:
 
-Firestore document-based identifiers
+- Firestore document-based identifiers
+- SQLite relational numeric identifiers
 
-SQLite relational numeric identifiers
+**Example:**
 
-Example:
 
 SQLite entity
 
@@ -140,18 +128,18 @@ Ticket record
 vendor_id_local: 2
 vendor_id_firebase: "firebase_vendor_123"
 
+
 This enables:
 
-Efficient relational JOINs locally
+- Efficient relational JOINs locally
+- Consistent cloud references
+- Deterministic mapping across environments
 
-Consistent cloud references
+### Example SQL Queries
 
-Deterministic mapping across environments
+**Aggregation query:**
 
-Example SQL Queries
-
-Example aggregation query:
-
+```sql
 SELECT category_id, SUM(total) AS total_spent
 FROM tickets
 GROUP BY category_id
@@ -167,6 +155,7 @@ WHERE t.total > 500;
 These queries support analytics and reporting features within the application.
 
 Example REST Integration (Node.js)
+
 import fetch from 'node-fetch';
 
 async function processReceipt(imageBase64) {
