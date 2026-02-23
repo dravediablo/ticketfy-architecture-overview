@@ -172,8 +172,9 @@ async function processReceipt(imageBase64) {
   return await response.json();
 }
 
-This demonstrates the API-driven integration pattern between the mobile client and backend processing service.
 
+
+This demonstrates the API-driven integration pattern between the mobile client and backend processing service.
 Conflict Resolution Strategy
 
 Firestore server timestamps determine final write precedence
